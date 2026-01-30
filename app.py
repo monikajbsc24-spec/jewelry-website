@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, session
+from flask import Flask, render_template, redirect, url_for, session, request
 
 app = Flask(__name__)
 app.secret_key = "jewels_secret_key"
@@ -32,7 +32,18 @@ def clear_cart():
     session.pop("cart", None)
     return redirect(url_for("cart"))
 
+@app.route("/checkout", methods=["GET", "POST"])
+def checkout():
+    cart_ids = session.get("cart", [])
+    cart_items = [p for p in products if p["id"] in cart_ids]
+    total = sum(p["price"] for p in cart_items)
+
+    if request.method == "POST":
+        name = request.form["name"]
+        session.pop("cart", None)
+        return render_template("success.html", name=name, total=total)
+
+    return render_template("checkout.html", cart_items=cart_items, total=total)
+
 if __name__ == "__main__":
     app.run(debug=True)
-
-
